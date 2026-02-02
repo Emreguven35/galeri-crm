@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import './App.css'
 
@@ -78,19 +78,19 @@ function App() {
     }
   }
 
-  const addCustomer = async (e) => {
-    e.preventDefault()
-    if (!form.ad || !form.soyad) return alert('Ad ve soyad zorunlu')
-    try {
-      const res = await axios.post(`${API_URL}/customers`, form)
-      setCustomers([res.data, ...customers])
-      setForm({ ad: '', soyad: '', telefon: '', mail: '', adres: '', meslek: '', arac_bilgileri: '', satilan_tarih: '', alinan_tarih: '', referans: '', notlar: '', premium: false })
-      setPage('customers')
-      fetchStats()
-    } catch (err) {
-      console.error('Eklenemedi:', err)
-    }
+ const addCustomer = async (e) => {
+  e.preventDefault()
+  if (!form.ad || !form.soyad) return alert('Ad ve soyad zorunlu')
+  try {
+    const res = await axios.post(`${API_URL}/customers`, form)
+    setCustomers([res.data, ...customers])
+    setForm({ ad: '', soyad: '', telefon: '', mail: '', adres: '', meslek: '', arac_bilgileri: '', satilan_tarih: '', alinan_tarih: '', referans: '', notlar: '', premium: false })
+    setPage('customers')
+    fetchStats()
+  } catch (err) {
+    console.error('Eklenemedi:', err)
   }
+}
 
   const sendSms = () => {
     const r = customers.filter(c => checked.includes(c.id))
@@ -214,28 +214,51 @@ function App() {
   }
 
   // Add Customer
-  const Add = () => (
+const Add = () => {
+  const [localForm, setLocalForm] = useState({
+    ad: '', soyad: '', telefon: '', mail: '', adres: '',
+    meslek: '', arac_bilgileri: '', satilan_tarih: '',
+    alinan_tarih: '', referans: '', notlar: '', premium: false
+  })
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!localForm.ad || !localForm.soyad) return alert('Ad ve soyad zorunlu')
+    try {
+      const res = await axios.post(`${API_URL}/customers`, localForm)
+      setCustomers([res.data, ...customers])
+      setPage('customers')
+      fetchStats()
+    } catch (err) {
+      console.error('Eklenemedi:', err)
+    }
+  }
+
+  return (
     <div>
       <div className="header-row"><h1 className="page-title">Yeni Müşteri</h1><button className="back-link" onClick={() => setPage('customers')}>İptal</button></div>
       <div className="card">
-        <div className="form-grid">
-          <div className="form-group"><label className="form-label">Ad *</label><input className="form-input" value={form.ad} onChange={e => setForm({ ...form, ad: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Soyad *</label><input className="form-input" value={form.soyad} onChange={e => setForm({ ...form, soyad: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Telefon</label><input className="form-input" value={form.telefon} onChange={e => setForm({ ...form, telefon: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">E-posta</label><input className="form-input" value={form.mail} onChange={e => setForm({ ...form, mail: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Meslek</label><input className="form-input" value={form.meslek} onChange={e => setForm({ ...form, meslek: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Referans</label><input className="form-input" value={form.referans} onChange={e => setForm({ ...form, referans: e.target.value })} /></div>
-          <div className="form-group form-group-full"><label className="form-label">Adres</label><input className="form-input" value={form.adres} onChange={e => setForm({ ...form, adres: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Alınan Tarih</label><input className="form-input" type="date" value={form.alinan_tarih} onChange={e => setForm({ ...form, alinan_tarih: e.target.value })} /></div>
-          <div className="form-group"><label className="form-label">Satılan Tarih</label><input className="form-input" type="date" value={form.satilan_tarih} onChange={e => setForm({ ...form, satilan_tarih: e.target.value })} /></div>
-          <div className="form-group form-group-full"><label className="form-label">Araç Bilgileri</label><textarea className="form-textarea" value={form.arac_bilgileri} onChange={e => setForm({ ...form, arac_bilgileri: e.target.value })} /></div>
-          <div className="form-group form-group-full"><label className="form-label">Notlar</label><textarea className="form-textarea" rows="3" value={form.notlar} onChange={e => setForm({ ...form, notlar: e.target.value })} /></div>
-          <div className="form-group form-group-full"><label className="form-checkbox"><input type="checkbox" className="checkbox" checked={form.premium} onChange={e => setForm({ ...form, premium: e.target.checked })} /> ⭐ Premium Müşteri</label></div>
-        </div>
-        <div className="form-actions"><button className="btn btn-outline" onClick={() => setPage('customers')}>İptal</button><button className="btn btn-blue" onClick={addCustomer}>Ekle</button></div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className="form-group"><label className="form-label">Ad *</label><input className="form-input" value={localForm.ad} onChange={e => setLocalForm(prev => ({ ...prev, ad: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Soyad *</label><input className="form-input" value={localForm.soyad} onChange={e => setLocalForm(prev => ({ ...prev, soyad: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Telefon</label><input className="form-input" value={localForm.telefon} onChange={e => setLocalForm(prev => ({ ...prev, telefon: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">E-posta</label><input className="form-input" value={localForm.mail} onChange={e => setLocalForm(prev => ({ ...prev, mail: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Meslek</label><input className="form-input" value={localForm.meslek} onChange={e => setLocalForm(prev => ({ ...prev, meslek: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Referans</label><input className="form-input" value={localForm.referans} onChange={e => setLocalForm(prev => ({ ...prev, referans: e.target.value }))} /></div>
+            <div className="form-group form-group-full"><label className="form-label">Adres</label><input className="form-input" value={localForm.adres} onChange={e => setLocalForm(prev => ({ ...prev, adres: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Alınan Tarih</label><input className="form-input" type="date" value={localForm.alinan_tarih} onChange={e => setLocalForm(prev => ({ ...prev, alinan_tarih: e.target.value }))} /></div>
+            <div className="form-group"><label className="form-label">Satılan Tarih</label><input className="form-input" type="date" value={localForm.satilan_tarih} onChange={e => setLocalForm(prev => ({ ...prev, satilan_tarih: e.target.value }))} /></div>
+            <div className="form-group form-group-full"><label className="form-label">Araç Bilgileri</label><textarea className="form-textarea" value={localForm.arac_bilgileri} onChange={e => setLocalForm(prev => ({ ...prev, arac_bilgileri: e.target.value }))} /></div>
+            <div className="form-group form-group-full"><label className="form-label">Notlar</label><textarea className="form-textarea" rows="3" value={localForm.notlar} onChange={e => setLocalForm(prev => ({ ...prev, notlar: e.target.value }))} /></div>
+            <div className="form-group form-group-full"><label className="form-checkbox"><input type="checkbox" className="checkbox" checked={localForm.premium} onChange={e => setLocalForm(prev => ({ ...prev, premium: e.target.checked }))} /> ⭐ Premium Müşteri</label></div>
+          </div>
+          <div className="form-actions"><button type="button" className="btn btn-outline" onClick={() => setPage('customers')}>İptal</button><button type="submit" className="btn btn-blue">Ekle</button></div>
+        </form>
       </div>
     </div>
   )
+}
 
   // SMS Modal
   const SmsModal = () => {
