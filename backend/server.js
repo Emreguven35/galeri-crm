@@ -27,24 +27,6 @@ app.get('/api/customers', async (req, res) => {
   }
 });
 
-// Müşteri ara
-app.get('/api/customers/search', async (req, res) => {
-  try {
-    const { q } = req.query;
-    const result = await pool.query(
-      `SELECT * FROM customers 
-       WHERE ad ILIKE $1 OR soyad ILIKE $1 OR telefon ILIKE $1 
-       OR mail ILIKE $1 OR tc_kimlik ILIKE $1
-       ORDER BY created_at DESC`,
-      [`%${q}%`]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Arama hatası' });
-  }
-});
-
 // Tek müşteri getir
 app.get('/api/customers/:id', async (req, res) => {
   try {
@@ -63,11 +45,11 @@ app.get('/api/customers/:id', async (req, res) => {
 // Yeni müşteri ekle
 app.post('/api/customers', async (req, res) => {
   try {
-    const { ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih, satilan_tarih, referans, notlar, premium, tc_kimlik } = req.body;
+    const { ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih, satilan_tarih, referans, notlar, premium, tc_kimlik, puan } = req.body;
     const result = await pool.query(
-      `INSERT INTO customers (ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih, satilan_tarih, referans, notlar, premium, tc_kimlik)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
-      [ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih || null, satilan_tarih || null, referans, notlar, premium || false, tc_kimlik]
+      `INSERT INTO customers (ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih, satilan_tarih, referans, notlar, premium, tc_kimlik, puan)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      [ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih || null, satilan_tarih || null, referans, notlar, premium || false, tc_kimlik, puan || 'yesil']
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -80,11 +62,11 @@ app.post('/api/customers', async (req, res) => {
 app.put('/api/customers/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih, satilan_tarih, referans, notlar, premium, tc_kimlik } = req.body;
+    const { ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih, satilan_tarih, referans, notlar, premium, tc_kimlik, puan } = req.body;
     const result = await pool.query(
-      `UPDATE customers SET ad=$1, soyad=$2, telefon=$3, mail=$4, adres=$5, meslek=$6, arac_bilgileri=$7, alinan_tarih=$8, satilan_tarih=$9, referans=$10, notlar=$11, premium=$12, tc_kimlik=$13, updated_at=NOW()
-       WHERE id=$14 RETURNING *`,
-      [ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih || null, satilan_tarih || null, referans, notlar, premium, tc_kimlik, id]
+      `UPDATE customers SET ad=$1, soyad=$2, telefon=$3, mail=$4, adres=$5, meslek=$6, arac_bilgileri=$7, alinan_tarih=$8, satilan_tarih=$9, referans=$10, notlar=$11, premium=$12, tc_kimlik=$13, puan=$14, updated_at=NOW()
+       WHERE id=$15 RETURNING *`,
+      [ad, soyad, telefon, mail, adres, meslek, arac_bilgileri, alinan_tarih || null, satilan_tarih || null, referans, notlar, premium, tc_kimlik, puan, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Müşteri bulunamadı' });

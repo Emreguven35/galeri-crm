@@ -620,3 +620,60 @@ tr:hover td {
     font-size: 0.8rem;
   }
 }
+/* Puan Badge */
+.puan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid;
+  margin-left: 8px;
+}
+
+.puan-badge svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Puan Selector */
+.puan-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.puan-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.puan-btn:hover {
+  border-color: #9ca3af;
+}
+
+.puan-btn.active {
+  border-width: 2px;
+}
+
+.puan-yesil.active {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.puan-sari.active {
+  border-color: #eab308;
+  background: #fefce8;
+}
+
+.puan-kirmizi.active {
+  border-color: #ef4444;
+  background: #fef2f2;
+}

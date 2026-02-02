@@ -13,6 +13,7 @@ function App() {
   const [smsText, setSmsText] = useState('')
   const [showSms, setShowSms] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [editMode, setEditMode] = useState(false)
 
   useEffect(() => {
     fetchCustomers()
@@ -78,6 +79,29 @@ function App() {
     return new Date(date).toLocaleDateString('tr-TR')
   }
 
+  const formatDateForInput = (date) => {
+    if (!date) return ''
+    return new Date(date).toISOString().split('T')[0]
+  }
+
+  const getPuanColor = (puan) => {
+    switch(puan) {
+      case 'kirmizi': return '#ef4444'
+      case 'sari': return '#eab308'
+      case 'yesil': return '#22c55e'
+      default: return '#22c55e'
+    }
+  }
+
+  const getPuanLabel = (puan) => {
+    switch(puan) {
+      case 'kirmizi': return 'Kırmızı'
+      case 'sari': return 'Sarı'
+      case 'yesil': return 'Yeşil'
+      default: return 'Yeşil'
+    }
+  }
+
   // Icons
   const Icon = {
     Car: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>,
@@ -85,6 +109,7 @@ function App() {
     Star: ({ filled }) => <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     Plus: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5v14"/></svg>,
     Trash: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>,
+    Edit: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
     Phone: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
     Mail: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
     MapPin: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
@@ -94,7 +119,16 @@ function App() {
     Msg: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
     Send: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m22 2-7 20-4-9-9-4Z"/></svg>,
     Id: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>,
+    Circle: ({ color }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>,
   }
+
+  // Puan Badge Component
+  const PuanBadge = ({ puan }) => (
+    <span className="puan-badge" style={{ backgroundColor: getPuanColor(puan) + '20', color: getPuanColor(puan), borderColor: getPuanColor(puan) }}>
+      <Icon.Circle color={getPuanColor(puan)} />
+      {getPuanLabel(puan)}
+    </span>
+  )
 
   // Dashboard
   const Dashboard = () => (
@@ -110,7 +144,14 @@ function App() {
           <div key={c.id} className="customer-item" onClick={() => { setSelected(c); setPage('profile') }}>
             <div className="customer-info">
               <div className="avatar">{c.ad[0]}{c.soyad[0]}</div>
-              <div><div className="customer-name">{c.ad} {c.soyad} {c.premium && <Icon.Star filled />}</div><div className="customer-detail">{c.arac_bilgileri || '-'}</div></div>
+              <div>
+                <div className="customer-name">
+                  {c.ad} {c.soyad} 
+                  {c.premium && <Icon.Star filled />}
+                  <PuanBadge puan={c.puan} />
+                </div>
+                <div className="customer-detail">{c.arac_bilgileri || '-'}</div>
+              </div>
             </div>
             <div className="customer-detail">{formatDate(c.satilan_tarih)}</div>
           </div>
@@ -163,13 +204,17 @@ function App() {
             </thead>
             <tbody>
               {filtered.map(c => (
-                <tr key={c.id} onClick={() => { setSelected(c); setPage('profile') }}>
+                <tr key={c.id} onClick={() => { setSelected(c); setEditMode(false); setPage('profile') }}>
                   <td onClick={e => e.stopPropagation()}><input type="checkbox" className="checkbox" checked={checked.includes(c.id)} onChange={() => toggleCheck(c.id)} /></td>
                   <td>
                     <div className="customer-info">
                       <div className="avatar">{c.ad[0]}{c.soyad[0]}</div>
                       <div>
-                        <div className="customer-name">{c.ad} {c.soyad}<button className="star-btn" onClick={e => togglePremium(c.id, e)}><Icon.Star filled={c.premium} /></button></div>
+                        <div className="customer-name">
+                          {c.ad} {c.soyad}
+                          <button className="star-btn" onClick={e => togglePremium(c.id, e)}><Icon.Star filled={c.premium} /></button>
+                          <PuanBadge puan={c.puan} />
+                        </div>
                         <div className="customer-detail">{c.meslek || '-'}</div>
                       </div>
                     </div>
@@ -191,14 +236,98 @@ function App() {
   // Profile
   const Profile = () => {
     if (!selected) return null
+    
+    const [editForm, setEditForm] = useState({
+      ad: selected.ad || '',
+      soyad: selected.soyad || '',
+      telefon: selected.telefon || '',
+      mail: selected.mail || '',
+      adres: selected.adres || '',
+      meslek: selected.meslek || '',
+      arac_bilgileri: selected.arac_bilgileri || '',
+      satilan_tarih: formatDateForInput(selected.satilan_tarih),
+      alinan_tarih: formatDateForInput(selected.alinan_tarih),
+      referans: selected.referans || '',
+      notlar: selected.notlar || '',
+      premium: selected.premium || false,
+      tc_kimlik: selected.tc_kimlik || '',
+      puan: selected.puan || 'yesil'
+    })
+
+    const handleUpdate = async (e) => {
+      e.preventDefault()
+      if (!editForm.ad || !editForm.soyad) return alert('Ad ve soyad zorunlu')
+      try {
+        const res = await axios.put(`${API_URL}/customers/${selected.id}`, editForm)
+        setCustomers(customers.map(c => c.id === selected.id ? res.data : c))
+        setSelected(res.data)
+        setEditMode(false)
+        fetchStats()
+      } catch (err) {
+        console.error('Güncellenemedi:', err)
+      }
+    }
+
+    if (editMode) {
+      return (
+        <div>
+          <div className="header-row"><h1 className="page-title">Müşteri Düzenle</h1><button className="back-link" onClick={() => setEditMode(false)}>İptal</button></div>
+          <div className="card">
+            <form onSubmit={handleUpdate}>
+              <div className="form-grid">
+                <div className="form-group"><label className="form-label">Ad *</label><input className="form-input" value={editForm.ad} onChange={e => setEditForm(prev => ({ ...prev, ad: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Soyad *</label><input className="form-input" value={editForm.soyad} onChange={e => setEditForm(prev => ({ ...prev, soyad: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">TC Kimlik</label><input className="form-input" maxLength="11" value={editForm.tc_kimlik} onChange={e => setEditForm(prev => ({ ...prev, tc_kimlik: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Telefon</label><input className="form-input" value={editForm.telefon} onChange={e => setEditForm(prev => ({ ...prev, telefon: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">E-posta</label><input className="form-input" value={editForm.mail} onChange={e => setEditForm(prev => ({ ...prev, mail: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Meslek</label><input className="form-input" value={editForm.meslek} onChange={e => setEditForm(prev => ({ ...prev, meslek: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Referans</label><input className="form-input" value={editForm.referans} onChange={e => setEditForm(prev => ({ ...prev, referans: e.target.value }))} /></div>
+                <div className="form-group form-group-full"><label className="form-label">Adres</label><input className="form-input" value={editForm.adres} onChange={e => setEditForm(prev => ({ ...prev, adres: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Alınan Tarih</label><input className="form-input" type="date" value={editForm.alinan_tarih} onChange={e => setEditForm(prev => ({ ...prev, alinan_tarih: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Satılan Tarih</label><input className="form-input" type="date" value={editForm.satilan_tarih} onChange={e => setEditForm(prev => ({ ...prev, satilan_tarih: e.target.value }))} /></div>
+                <div className="form-group form-group-full"><label className="form-label">Araç Bilgileri</label><textarea className="form-textarea" value={editForm.arac_bilgileri} onChange={e => setEditForm(prev => ({ ...prev, arac_bilgileri: e.target.value }))} /></div>
+                <div className="form-group form-group-full"><label className="form-label">Notlar</label><textarea className="form-textarea" rows="3" value={editForm.notlar} onChange={e => setEditForm(prev => ({ ...prev, notlar: e.target.value }))} /></div>
+                <div className="form-group">
+                  <label className="form-label">Müşteri Puanı</label>
+                  <div className="puan-selector">
+                    <button type="button" className={`puan-btn puan-yesil ${editForm.puan === 'yesil' ? 'active' : ''}`} onClick={() => setEditForm(prev => ({ ...prev, puan: 'yesil' }))}>🟢 Yeşil</button>
+                    <button type="button" className={`puan-btn puan-sari ${editForm.puan === 'sari' ? 'active' : ''}`} onClick={() => setEditForm(prev => ({ ...prev, puan: 'sari' }))}>🟡 Sarı</button>
+                    <button type="button" className={`puan-btn puan-kirmizi ${editForm.puan === 'kirmizi' ? 'active' : ''}`} onClick={() => setEditForm(prev => ({ ...prev, puan: 'kirmizi' }))}>🔴 Kırmızı</button>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">&nbsp;</label>
+                  <label className="form-checkbox"><input type="checkbox" className="checkbox" checked={editForm.premium} onChange={e => setEditForm(prev => ({ ...prev, premium: e.target.checked }))} /> ⭐ Premium Müşteri</label>
+                </div>
+              </div>
+              <div className="form-actions"><button type="button" className="btn btn-outline" onClick={() => setEditMode(false)}>İptal</button><button type="submit" className="btn btn-blue">Kaydet</button></div>
+            </form>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div>
-        <div className="header-row"><button className="back-link" onClick={() => setPage('customers')}>← Geri</button><button className="btn btn-red" onClick={() => deleteCustomer(selected.id)}><Icon.Trash />Sil</button></div>
+        <div className="header-row">
+          <button className="back-link" onClick={() => setPage('customers')}>← Geri</button>
+          <div className="btn-group">
+            <button className="btn btn-blue" onClick={() => setEditMode(true)}><Icon.Edit />Düzenle</button>
+            <button className="btn btn-red" onClick={() => deleteCustomer(selected.id)}><Icon.Trash />Sil</button>
+          </div>
+        </div>
         <div className="card">
           <div className="profile-header">
             <div className="profile-header-content">
               <div className="avatar avatar-lg">{selected.ad[0]}{selected.soyad[0]}</div>
-              <div><div className="profile-name">{selected.ad} {selected.soyad} {selected.premium && <span className="premium-badge">⭐ PREMIUM</span>}</div><div style={{ opacity: .9, marginTop: 4 }}>{selected.meslek || '-'}</div></div>
+              <div>
+                <div className="profile-name">
+                  {selected.ad} {selected.soyad} 
+                  {selected.premium && <span className="premium-badge">⭐ PREMIUM</span>}
+                  <PuanBadge puan={selected.puan} />
+                </div>
+                <div style={{ opacity: .9, marginTop: 4 }}>{selected.meslek || '-'}</div>
+              </div>
             </div>
           </div>
           <div className="profile-body">
@@ -231,7 +360,7 @@ function App() {
     const [localForm, setLocalForm] = useState({
       ad: '', soyad: '', telefon: '', mail: '', adres: '',
       meslek: '', arac_bilgileri: '', satilan_tarih: '',
-      alinan_tarih: '', referans: '', notlar: '', premium: false, tc_kimlik: ''
+      alinan_tarih: '', referans: '', notlar: '', premium: false, tc_kimlik: '', puan: 'yesil'
     })
 
     const handleSubmit = async (e) => {
@@ -265,7 +394,18 @@ function App() {
               <div className="form-group"><label className="form-label">Satılan Tarih</label><input className="form-input" type="date" value={localForm.satilan_tarih} onChange={e => setLocalForm(prev => ({ ...prev, satilan_tarih: e.target.value }))} /></div>
               <div className="form-group form-group-full"><label className="form-label">Araç Bilgileri</label><textarea className="form-textarea" value={localForm.arac_bilgileri} onChange={e => setLocalForm(prev => ({ ...prev, arac_bilgileri: e.target.value }))} /></div>
               <div className="form-group form-group-full"><label className="form-label">Notlar</label><textarea className="form-textarea" rows="3" value={localForm.notlar} onChange={e => setLocalForm(prev => ({ ...prev, notlar: e.target.value }))} /></div>
-              <div className="form-group form-group-full"><label className="form-checkbox"><input type="checkbox" className="checkbox" checked={localForm.premium} onChange={e => setLocalForm(prev => ({ ...prev, premium: e.target.checked }))} /> ⭐ Premium Müşteri</label></div>
+              <div className="form-group">
+                <label className="form-label">Müşteri Puanı</label>
+                <div className="puan-selector">
+                  <button type="button" className={`puan-btn puan-yesil ${localForm.puan === 'yesil' ? 'active' : ''}`} onClick={() => setLocalForm(prev => ({ ...prev, puan: 'yesil' }))}>🟢 Yeşil</button>
+                  <button type="button" className={`puan-btn puan-sari ${localForm.puan === 'sari' ? 'active' : ''}`} onClick={() => setLocalForm(prev => ({ ...prev, puan: 'sari' }))}>🟡 Sarı</button>
+                  <button type="button" className={`puan-btn puan-kirmizi ${localForm.puan === 'kirmizi' ? 'active' : ''}`} onClick={() => setLocalForm(prev => ({ ...prev, puan: 'kirmizi' }))}>🔴 Kırmızı</button>
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">&nbsp;</label>
+                <label className="form-checkbox"><input type="checkbox" className="checkbox" checked={localForm.premium} onChange={e => setLocalForm(prev => ({ ...prev, premium: e.target.checked }))} /> ⭐ Premium Müşteri</label>
+              </div>
             </div>
             <div className="form-actions"><button type="button" className="btn btn-outline" onClick={() => setPage('customers')}>İptal</button><button type="submit" className="btn btn-blue">Ekle</button></div>
           </form>
