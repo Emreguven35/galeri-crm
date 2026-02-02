@@ -172,9 +172,9 @@ function App() {
     return (
       <div className="login-page">
         <div className="login-card">
-          <div className="login-logo">
-            <Logo size={50} />
-          </div>
+        <div className="login-logo">
+  <Logo size={80} showText={true} vertical={true} />
+</div>
           <h2 className="login-title">Giriş Yap</h2>
           {error && <div className="login-error">{error}</div>}
           <form onSubmit={handleLogin}>
@@ -528,7 +528,7 @@ function App() {
     <div className="app">
       <nav className="nav">
         <div className="nav-content">
-          <div className="nav-brand"><Logo size={30} /></div>
+          <div className="nav-brand"><Logo size={60} showText={true} vertical={false} /></div>
           <div className="nav-links">
             <button className={`nav-btn ${page === 'dashboard' ? 'nav-btn-active' : ''}`} onClick={() => setPage('dashboard')}>Ana Sayfa</button>
             <button className={`nav-btn ${['customers', 'profile', 'add'].includes(page) ? 'nav-btn-active' : ''}`} onClick={() => setPage('customers')}>Müşteriler</button>

@@ -1,8 +1,8 @@
-const Logo = ({ size = 40 }) => (
-  <svg width={size * 2.5} height={size} viewBox="0 0 250 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <text x="0" y="45" fontFamily="Arial Black, sans-serif" fontSize="36" fontWeight="900" fill="#000">ATA DİLEK</text>
-    <text x="0" y="75" fontFamily="Arial, sans-serif" fontSize="14" fontWeight="400" fill="#666">OTOMOTİV</text>
-  </svg>
+const Logo = ({ size = 50, showText = true, vertical = false }) => (
+  <div style={{ display: 'flex', flexDirection: vertical ? 'column' : 'row', alignItems: 'center', gap: vertical ? '8px' : '12px' }}>
+    <img src="/logo.png" alt="Ata Dilek" style={{ height: size }} />
+    {showText && <span style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', textAlign: 'center' }}>Ata Dilek Otomotiv</span>}
+  </div>
 )
 
 export default Logo
