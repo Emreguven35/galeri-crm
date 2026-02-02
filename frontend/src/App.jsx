@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
+import Logo from './logo'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 function App() {
+  const [user, setUser] = useState(null)
   const [page, setPage] = useState('dashboard')
   const [customers, setCustomers] = useState([])
   const [stats, setStats] = useState({ total: 0, premium: 0, thisMonth: 0 })
@@ -16,9 +18,18 @@ function App() {
   const [editMode, setEditMode] = useState(false)
 
   useEffect(() => {
-    fetchCustomers()
-    fetchStats()
+    const saved = localStorage.getItem('user')
+    if (saved) {
+      setUser(JSON.parse(saved))
+    }
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      fetchCustomers()
+      fetchStats()
+    }
+  }, [user])
 
   const fetchCustomers = async () => {
     try {
@@ -38,6 +49,11 @@ function App() {
     } catch (err) {
       console.error('İstatistikler yüklenemedi:', err)
     }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('user')
+    setUser(null)
   }
 
   const togglePremium = async (id, e) => {
@@ -120,6 +136,7 @@ function App() {
     Send: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m22 2-7 20-4-9-9-4Z"/></svg>,
     Id: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>,
     Circle: ({ color }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>,
+    Logout: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>,
   }
 
   // Puan Badge Component
@@ -129,6 +146,68 @@ function App() {
       {getPuanLabel(puan)}
     </span>
   )
+
+  // Login Page
+  const Login = () => {
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+
+    const handleLogin = async (e) => {
+      e.preventDefault()
+      setError('')
+      setIsLoading(true)
+      try {
+        const res = await axios.post(`${API_URL}/login`, { username, password })
+        localStorage.setItem('user', JSON.stringify(res.data.user))
+        setUser(res.data.user)
+      } catch (err) {
+        setError(err.response?.data?.error || 'Giriş başarısız')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    return (
+      <div className="login-page">
+        <div className="login-card">
+          <div className="login-logo">
+            <Logo size={50} />
+          </div>
+          <h2 className="login-title">Giriş Yap</h2>
+          {error && <div className="login-error">{error}</div>}
+          <form onSubmit={handleLogin}>
+            <div className="form-group">
+              <label className="form-label">Kullanıcı Adı</label>
+              <input 
+                className="form-input" 
+                type="text" 
+                value={username} 
+                onChange={e => setUsername(e.target.value)}
+                placeholder="Kullanıcı adınızı girin"
+                required 
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Şifre</label>
+              <input 
+                className="form-input" 
+                type="password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Şifrenizi girin"
+                required 
+              />
+            </div>
+            <button className="btn btn-blue login-btn" type="submit" disabled={isLoading}>
+              {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
 
   // Dashboard
   const Dashboard = () => (
@@ -440,14 +519,20 @@ function App() {
     )
   }
 
+  // Not logged in
+  if (!user) {
+    return <Login />
+  }
+
   return (
     <div className="app">
       <nav className="nav">
         <div className="nav-content">
-          <div className="nav-brand"><Icon.Car />Galeri CRM</div>
+          <div className="nav-brand"><Logo size={30} /></div>
           <div className="nav-links">
             <button className={`nav-btn ${page === 'dashboard' ? 'nav-btn-active' : ''}`} onClick={() => setPage('dashboard')}>Ana Sayfa</button>
             <button className={`nav-btn ${['customers', 'profile', 'add'].includes(page) ? 'nav-btn-active' : ''}`} onClick={() => setPage('customers')}>Müşteriler</button>
+            <button className="nav-btn logout-btn" onClick={handleLogout}><Icon.Logout /></button>
           </div>
         </div>
       </nav>
