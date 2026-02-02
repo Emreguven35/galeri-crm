@@ -20,16 +20,18 @@ pool.connect()
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('Login denemesi:', username, password);
     const result = await pool.query(
       'SELECT id, username, ad FROM users WHERE username = $1 AND password = $2',
       [username, password]
     );
+    console.log('Sonuç:', result.rows);
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı' });
     }
     res.json({ user: result.rows[0], token: 'logged-in' });
   } catch (err) {
-    console.error(err);
+    console.error('Login hatası:', err);
     res.status(500).json({ error: 'Giriş hatası' });
   }
 });
