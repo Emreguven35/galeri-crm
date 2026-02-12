@@ -9,13 +9,16 @@ function App() {
   const [user, setUser] = useState(null)
   const [page, setPage] = useState('dashboard')
   const [customers, setCustomers] = useState([])
-  const [stats, setStats] = useState({ total: 0, premium: 0, thisMonth: 0 })
+  const [stats, setStats] = useState({ total: 0, premium: 0 })
   const [selected, setSelected] = useState(null)
   const [checked, setChecked] = useState([])
   const [smsText, setSmsText] = useState('')
   const [showSms, setShowSms] = useState(false)
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
+  const [notification, setNotification] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   useEffect(() => {
     const saved = localStorage.getItem('user')
@@ -30,6 +33,11 @@ function App() {
       fetchStats()
     }
   }, [user])
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
+  }
 
   const fetchCustomers = async () => {
     try {
@@ -77,8 +85,10 @@ function App() {
       setCustomers(customers.filter(c => c.id !== id))
       if (selected?.id === id) { setSelected(null); setPage('customers') }
       fetchStats()
+      showNotification('Müşteri silindi', 'success')
     } catch (err) {
       console.error('Silinemedi:', err)
+      showNotification('Silme hatası', 'error')
     }
   }
 
@@ -137,6 +147,9 @@ function App() {
     Id: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>,
     Circle: ({ color }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>,
     Logout: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>,
+    ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>,
+    ChevronRight: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>,
+    Check: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
   }
 
   // Puan Badge Component
@@ -146,6 +159,17 @@ function App() {
       {getPuanLabel(puan)}
     </span>
   )
+
+  // Notification Component
+  const Notification = () => {
+    if (!notification) return null
+    return (
+      <div className={`notification ${notification.type}`}>
+        <Icon.Check />
+        {notification.message}
+      </div>
+    )
+  }
 
   // Login Page
   const Login = () => {
@@ -172,9 +196,9 @@ function App() {
     return (
       <div className="login-page">
         <div className="login-card">
-        <div className="login-logo">
-  <Logo size={80} showText={true} vertical={true} />
-</div>
+          <div className="login-logo">
+            <Logo size={80} showText={true} vertical={true} />
+          </div>
           <h2 className="login-title">Giriş Yap</h2>
           {error && <div className="login-error">{error}</div>}
           <form onSubmit={handleLogin}>
@@ -209,13 +233,12 @@ function App() {
     )
   }
 
-  // Dashboard
+  // Dashboard - Bu Ay kutucuğu kaldırıldı
   const Dashboard = () => (
     <div>
-      <div className="grid-3">
+      <div className="grid-2">
         <div className="stat-card stat-blue"><div><div className="stat-label">Toplam Müşteri</div><div className="stat-value">{stats.total}</div></div><Icon.Users /></div>
         <div className="stat-card stat-yellow"><div><div className="stat-label">Premium</div><div className="stat-value">{stats.premium}</div></div><Icon.Star filled /></div>
-        <div className="stat-card stat-green"><div><div className="stat-label">Bu Ay</div><div className="stat-value">{stats.thisMonth}</div></div><Icon.Car /></div>
       </div>
       <div className="card">
         <div className="section-title">Son Müşteriler</div>
@@ -239,7 +262,7 @@ function App() {
     </div>
   )
 
-  // Customer List
+  // Customer List with Pagination
   const List = () => {
     const [search, setSearch] = useState('')
     
@@ -250,7 +273,17 @@ function App() {
       c.tc_kimlik?.includes(search)
     )
 
-    const checkAll = () => setChecked(checked.length === filtered.length ? [] : filtered.map(c => c.id))
+    // Pagination
+    const totalPages = Math.ceil(filtered.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const paginatedCustomers = filtered.slice(startIndex, startIndex + itemsPerPage)
+
+    const checkAll = () => setChecked(checked.length === paginatedCustomers.length ? [] : paginatedCustomers.map(c => c.id))
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+      setCurrentPage(1)
+    }, [search])
 
     return (
       <div>
@@ -273,7 +306,7 @@ function App() {
           <table>
             <thead>
               <tr>
-                <th style={{ width: 50 }}><input type="checkbox" className="checkbox" checked={checked.length === filtered.length && filtered.length > 0} onChange={checkAll} /></th>
+                <th style={{ width: 50 }}><input type="checkbox" className="checkbox" checked={checked.length === paginatedCustomers.length && paginatedCustomers.length > 0} onChange={checkAll} /></th>
                 <th>Müşteri</th>
                 <th className="hide-mobile">TC Kimlik</th>
                 <th className="hide-mobile">İletişim</th>
@@ -282,7 +315,7 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(c => (
+              {paginatedCustomers.map(c => (
                 <tr key={c.id} onClick={() => { setSelected(c); setEditMode(false); setPage('profile') }}>
                   <td onClick={e => e.stopPropagation()}><input type="checkbox" className="checkbox" checked={checked.includes(c.id)} onChange={() => toggleCheck(c.id)} /></td>
                   <td>
@@ -306,7 +339,30 @@ function App() {
               ))}
             </tbody>
           </table>
-          {filtered.length === 0 && <div className="empty">{loading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}</div>}
+          {paginatedCustomers.length === 0 && <div className="empty">{loading ? 'Yükleniyor...' : 'Müşteri bulunamadı'}</div>}
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button 
+                className="pagination-btn" 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <Icon.ChevronLeft />
+              </button>
+              <span className="pagination-info">
+                {currentPage} / {totalPages} ({filtered.length} müşteri)
+              </span>
+              <button 
+                className="pagination-btn" 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <Icon.ChevronRight />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -342,8 +398,10 @@ function App() {
         setSelected(res.data)
         setEditMode(false)
         fetchStats()
+        showNotification('Müşteri güncellendi', 'success')
       } catch (err) {
         console.error('Güncellenemedi:', err)
+        showNotification('Güncelleme hatası', 'error')
       }
     }
 
@@ -450,8 +508,10 @@ function App() {
         setCustomers([res.data, ...customers])
         setPage('customers')
         fetchStats()
+        showNotification('Müşteri başarıyla kaydedildi', 'success')
       } catch (err) {
         console.error('Eklenemedi:', err)
+        showNotification('Kayıt hatası', 'error')
       }
     }
 
@@ -526,6 +586,7 @@ function App() {
 
   return (
     <div className="app">
+      <Notification />
       <nav className="nav">
         <div className="nav-content">
           <div className="nav-brand"><Logo size={60} showText={true} vertical={false} /></div>
